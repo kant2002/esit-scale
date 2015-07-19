@@ -1,0 +1,20 @@
+{
+  "name": "esit-scale",
+  "version": "1.0.0",
+  "description": "Scale Agent",
+  "main": "agent.js",
+  "dependencies": {
+    "colors": "^1.1.2",
+    "serialport": "^1.7.4",
+    "mongoose": "^4.0.6",
+    "underscore": "*",
+    "redis": "*",
+    "redis-timeseries": "*"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
