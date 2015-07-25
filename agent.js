@@ -7,7 +7,7 @@ var Sequelize  = require("sequelize");
 
 
 
-var sequelize = new Sequelize('scale_agent', 'homestead', 'secret', {
+var sequelize = new Sequelize('scale_agent', 'agent', 'esitsecret', {
   host: 'localhost',
   dialect: 'mysql',
 });
