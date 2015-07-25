@@ -22,7 +22,7 @@
     "sequelize": "^3.4.1",
     "serialport": "^1.7.4",
     "underscore": "*",
-    "redis": "*",
+    "redis": "*"
   
   },
   "devDependencies": {

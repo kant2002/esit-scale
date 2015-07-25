@@ -1,0 +1,26 @@
+.idea
+node_modules
+.vagrant
+.gradle
+.settings
+bower_components
+metadata.json
+.rvmrc
+build
+pkg/
+Session.vim
+spec/fixtures
+.*.sw[a-z]
+*.un~
+npm-debug.log
+
+## Local individual configuration file.
+config.local.js
+
+## Visual studio files
+.ntvs_analysis.dat
+.vs
+*.user
+bin/
+obj/
+.ntvs_analysis.dat.tmp
