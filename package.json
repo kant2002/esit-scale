@@ -1,20 +1,32 @@
+
 {
   "name": "esit-scale",
   "version": "1.0.0",
-  "description": "Scale Agent",
+  "private": true,
+  "description": "Esit Scale Agent",
   "main": "agent.js",
+  "scripts": {
+   
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zirun/esit-scale.git"
+  },
+  "author": "zirun",
+  "license": "ISC",
   "dependencies": {
+    "bcrypt": "^0.8.3",
+    "body-parser": "^1.12.4",
     "colors": "^1.1.2",
+    "mysql": "^2.8.0",
+    "sequelize": "^3.4.1",
     "serialport": "^1.7.4",
-    "mongoose": "^4.0.6",
     "underscore": "*",
     "redis": "*",
-    "redis-timeseries": "*"
+  
   },
-  "devDependencies": {},
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC"
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-eslint": "^0.15.0"
+  }
 }

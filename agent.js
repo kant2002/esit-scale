@@ -1,30 +1,84 @@
 
-var Mongoose   = require('mongoose');
 var SerialPort = require("serialport").SerialPort;
-var redis      = require('redis').createClient();
+var Redis      = require('redis');
+var Sequelize  = require("sequelize");
+//require connection config
 
 
-var db_name = 'test';  //further performing config variables
 
 
-Mongoose.connect('mongodb://localhost/'+db_name, function(error) {
-    if (error) {
-    	console.log('MONGODB:'+db_name+' could not connect to server '+error);
-    } else{
-    	console.log('MONGODB:'+db_name+' connection estabilished');
-    }
+var sequelize = new Sequelize('scale_agent', 'homestead', 'secret', {
+  host: '192.168.10.10',
+  dialect: 'mysql',
 });
 
+var redis = Redis.createClient();
 
-// Daily report document-scheme of scale index
-var ScaleReportSchema = Mongoose.Schema({  
-	_id: String,
-	register_time: Date,
-	update_time: Number,
-	hourly: Object
+
+var BeltScale = sequelize.define('belt_scale', {
+  registerTime: {
+  	type: Sequelize.DATE,
+  	field: 'register_time'
+  },
+  scaleName1: {
+  	type: Sequelize.STRING,
+  	field: 'scale1_name'
+  },
+  scaleAmount1: {
+    type: Sequelize.INTEGER,
+    field: 'scale1_amount'
+  },
+  scaleCounter1: {
+  	type: Sequelize.INTEGER,
+    field: 'scale1_counter'
+  },
+  scaleName2: {
+  	type: Sequelize.STRING,
+  	field: 'scale2_name'
+  },
+  scaleAmount2: {
+    type: Sequelize.INTEGER,
+    field: 'scale2_amount'
+  },
+  scaleCounter2: {
+  	type: Sequelize.INTEGER,
+    field: 'scale2_counter'
+  },
+  scaleName3: {
+  	type: Sequelize.STRING,
+  	field: 'scale3_name'
+  },
+  scaleAmount3: {
+    type: Sequelize.INTEGER,
+    field: 'scale3_amount'
+  },
+  scaleCounter3: {
+  	type: Sequelize.INTEGER,
+    field: 'scale3_counter'
+  },
+  scaleName4: {
+  	type: Sequelize.STRING,
+  	field: 'scale4_name'
+  },
+  scaleAmount4: {
+    type: Sequelize.INTEGER,
+    field: 'scale4_amount'
+  },
+  scaleCounter4: {
+  	type: Sequelize.INTEGER,
+    field: 'scale4_counter'
+  }
+
+}, {
+	timestamps: false,
+	freezeTableName: true // Model tableName will be the same as the model name
 });
 
-var scaleMetrics = Mongoose.model('rep', ScaleReportSchema);
+BeltScale.sync().then(function () {
+  // Table created
+ 	console.log('BeltScale Table Created');
+});
+
 
 var date = new Date();
 var day = date.getDate();
@@ -41,42 +95,6 @@ var counter = 49300;
 var oldcounter = 49230; //
 var olddate = new Date();
 var bulk;
-
-
-// scaleMetrics.findOne({}, null, {sort: {register_time: -1 }}, function(error, post){
-// 	if(error){
-// 		console.log('Last Record Not Found');
-// 	}
-// 	else{
-// 		console.log('Last Record', post);
-// 	}
-// });
-
-
-// var serialPort = new SerialPort("/dev/tty.wchusbserial1410", {
-//   baudrate: 115200
-// }, false); 
-
-
-// serialPort.open(function (error) {
-//   if (error) {
-//     console.log('SERIAL_PORT:RS232 connection failed: '+error);
-//   } else {
-//     console.log('SERIAL_PORT:RS232 success');
-
-//     serialPort.on('data', function(data) {
-//     	console.log('data received: ' + data);
-//     });
-   
-// 	serialPort.write("A", function(err, results) {
-// 		console.log('err ' + err);
-// 		console.log('results ' + results.toString(16));
-// 	}); 
-//   }
-// });
-
-
-
 
 
 
@@ -166,26 +184,30 @@ setInterval(function(){
 		olddate = date;
 		oldcounter = counter;	
 
-		var inc = { $inc: {} };
-		inc.$inc['hourly.' + virual_hour+'.counter'] = counter;
-		inc.$inc['hourly.' + virual_hour+'.bulk'] = bulk;
-		inc.register_time = register_str;
-		inc.update_time = virual_hour;
-		scaleMetrics.findOneAndUpdate({
-			register_time: {"$gte": new Date(2015, month, virual_day)}
-		}, inc, {upsert: true, sort: {"register_time": -1}}, function(err, post){
-			if(!post){
+		var indicator = {};
 
-				console.log('NEW DAY');
-			}
-			else{
+		indicator.scaleName1 = "PGS";
+		indicator.scaleCounter1 = counter;
+		indicator.scaleAmount1 = bulk;
+		indicator.registerTime = register_str;
+		// inc.update_time = virual_hour;
+		
+		redis.hmset("scale1", "speed", 1, "counter", counter, "name", "pgs");
 
-				//console.log(post);
-				console.log('COUNTER: ', bulk, counter);
-			}
 
-			//console.log('==============================================');
-		});
+
+    	// redis.hmget(["scale1", "name", "counter", "speed"], function (err, replies) {
+	        
+	    //     replies.forEach(function (reply, i) {
+	    //         console.log("    " + i + ": " + reply);
+	    //     });
+	    //     //redis.quit();
+	    // });
+
+		BeltScale.create(indicator).then(function(indication) {
+			// console.log(indication);
+		})
+	
 	}
 
 
@@ -195,8 +217,3 @@ setInterval(function(){
 
 
 }, 500);
-
-
-
-
-
