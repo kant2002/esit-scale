@@ -8,7 +8,7 @@ var Sequelize  = require("sequelize");
 
 
 var sequelize = new Sequelize('scale_agent', 'homestead', 'secret', {
-  host: '192.168.10.10',
+  host: 'localhost',
   dialect: 'mysql',
 });
 
