@@ -65,7 +65,7 @@ function wait() {
 }
 
 function save(time){
-
+  console.log(lastRecord.beltCounter1, serialRecord.beltCounter1)
   if((lastRecord.beltCounter1 < serialRecord.beltCounter1)){
     console.log('NEW RECORD');
     serialRecord.actualDate = new Date();
