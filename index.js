@@ -15,6 +15,7 @@ var redis = Redis.createClient();
 
 
 var oldTime = new Date();
+var lastResults;
 // var day = date.getDate();
 // var hour = date.getHours();
 // var minute = date.getMinutes();
@@ -22,8 +23,9 @@ var oldTime = new Date();
 // var year = date.getFullYear();
 
 
-DB.query('SELECT * FROM yield ORDER BY id DESC LIMIT 1', function(err, results, fields){
-  console.log (err, results, fields);
+DB.query('SELECT * FROM yield ORDER BY id DESC LIMIT 1', function(err, results){
+  if(err) console.log(err);
+  lastResults = results[0];
 });
 
 var counter = 49300;
@@ -50,6 +52,14 @@ serialPort1.open(function (error) {
 
     serialPort1.on('data', function(data) {
       console.log('data received: ' + data);
+
+
+      if(data == lastResults.beltCounter1){
+        console.log('NO UPDATES');
+      }
+      else{
+        console.log('NEW COUNTER DATA: ' + data)
+      }
 
       // counter = data;
       // bulk = counter-oldcounter;
