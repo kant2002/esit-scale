@@ -19,6 +19,7 @@ var oldTime = new Date();
 // --------------------------------- serialPort1
 
 var serialPorts = [];
+var serialRecord = {};
 
 serialPorts[0] = {connection:  new SerialPort("/dev/ttyUSB0", {
   baudrate: 9600
