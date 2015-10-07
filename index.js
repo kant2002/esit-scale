@@ -4,14 +4,7 @@ var Redis      = require('redis');
 var mysql      = require('promise-mysql');
 var DB;
 
-mysql.createConnection({
-  host: '192.168.0.103',
-  user: 'esitagent',
-  password: 'esitsqlsecret',
-  database: 'scale_agent'
-}).then(function(conn){
-  DB = conn;
-}); 
+
 
 var redis = Redis.createClient();
 
@@ -44,7 +37,14 @@ var serialPort1 = new SerialPort("/dev/ttyUSB0", {
 }, false); 
 
 
-DB.query('SELECT * FROM yield ORDER BY id DESC LIMIT 1').then(function(rows){
+mysql.createConnection({
+  host: '192.168.0.103',
+  user: 'esitagent',
+  password: 'esitsqlsecret',
+  database: 'scale_agent'
+}).then(function(connection){
+  return connection.query('SELECT * FROM yield ORDER BY id DESC LIMIT 1');
+}).then(function(rows){
   lastResults = rows[0];
   console.log(lastResults);
 
