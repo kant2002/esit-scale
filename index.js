@@ -33,7 +33,7 @@ serialPorts[0].connection.open(function (error) {
 
     serialPorts[0].connection.on('data', function(data) {
       //console.log('data received: ' + data);
-      serialRecord['beltCounter'+1]
+      serialRecord['beltCounter'+1] = data;
     });
   }
 });
