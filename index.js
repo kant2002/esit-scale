@@ -1,14 +1,16 @@
 
 var SerialPort = require("serialport").SerialPort;
 var Redis      = require('redis');
-var mysql      = require('mysql');
+var mysql      = require('promise-mysql');
+var DB;
 
-
-var DB = mysql.createConnection({
+mysql.createConnection({
   host: '192.168.0.103',
   user: 'esitagent',
   password: 'esitsqlsecret',
   database: 'scale_agent'
+}).then(function(conn){
+  DB = conn;
 }); 
 
 var redis = Redis.createClient();
@@ -23,10 +25,7 @@ var lastResults;
 // var year = date.getFullYear();
 
 
-DB.query('SELECT * FROM yield ORDER BY id DESC LIMIT 1', function(err, results){
-  if(err) console.log(err);
-  lastResults = results[0];
-});
+
 
 var counter = 49300;
 var oldcounter = 49230; //
@@ -44,22 +43,57 @@ var serialPort1 = new SerialPort("/dev/ttyUSB0", {
   baudrate: 9600
 }, false); 
 
-serialPort1.open(function (error) {
-  if (error) {
-    console.log('SERIAL_PORT:RS232 connection failed: ',error);
-  } else {
-    console.log('SERIAL_PORT:RS232 success');
 
-    serialPort1.on('data', function(data) {
-      console.log('data received: ' + data);
+DB.query('SELECT * FROM yield ORDER BY id DESC LIMIT 1', function(err, results){
+  if(err) console.log(err);
+  
+}).then(function(rows){
+  lastResults = rows[0];
+  console.log(lastResults);
+
+  serialPort1.open(function (error) {
+    if (error) {
+      console.log('SERIAL_PORT:RS232 connection failed: ',error);
+    } else {
+      console.log('SERIAL_PORT:RS232 success');
+
+      serialPort1.on('data', function(data) {
+        console.log('data received: ' + data);
 
 
-      if(data == lastResults.beltCounter1){
-        console.log('NO UPDATES');
-      }
-      else{
-        console.log('NEW COUNTER DATA: ' + data)
-      }
+        if(data == lastResults.beltCounter1){
+          console.log('NO UPDATES');
+        }
+        else{
+          console.log('NEW COUNTER DATA: ' + data)
+        }
+      });
+    }
+  });
+}).catch(function(err){
+  console.log('ERROR: ', err);
+});
+
+// var serialPort1 = new SerialPort("/dev/ttyUSB0", {
+//   baudrate: 9600
+// }, false); 
+
+// serialPort1.open(function (error) {
+//   if (error) {
+//     console.log('SERIAL_PORT:RS232 connection failed: ',error);
+//   } else {
+//     console.log('SERIAL_PORT:RS232 success');
+
+//     serialPort1.on('data', function(data) {
+//       console.log('data received: ' + data);
+
+
+//       if(data == lastResults.beltCounter1){
+//         console.log('NO UPDATES');
+//       }
+//       else{
+//         console.log('NEW COUNTER DATA: ' + data)
+//       }
 
       // counter = data;
       // bulk = counter-oldcounter;
@@ -132,13 +166,13 @@ serialPort1.open(function (error) {
 
 
 
-    });
+    // });
    
   // serialPort.write("A", function(err, results) {
   //   console.log('err ' + err);
   //   console.log('results ' + results.toString(16));
   // }); 
-  }
-});
+  // }
+// });
 
 
