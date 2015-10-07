@@ -32,7 +32,7 @@ serialPorts[0].connection.open(function (error) {
     console.log('SERIAL_PORT:RS232 success');
 
     serialPorts[0].connection.on('data', function(data) {
-      console.log('data received: ' + data);
+      //console.log('data received: ' + data);
       serialRecord['beltCounter'+1]
     });
   }
