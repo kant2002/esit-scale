@@ -48,7 +48,7 @@ serialPort1.open(function (error) {
   } else {
     console.log('SERIAL_PORT:RS232 success');
 
-    serialPort.on('data', function(data) {
+    serialPort1.on('data', function(data) {
       console.log('data received: ' + data);
 
       // counter = data;
