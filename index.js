@@ -10,31 +10,32 @@ var redis = Redis.createClient();
 
 
 var oldTime = new Date();
-var lastResults;
-// var day = date.getDate();
-// var hour = date.getHours();
-// var minute = date.getMinutes();
-// var second = date.getSeconds();
-// var year = date.getFullYear();
 
 
 
 
-var counter = 49300;
-var oldcounter = 49230; //
-var olddate = new Date();
-var date, bulk;
-
-var prev_time, prev_counter, speed;
-
-var houe_diff;
 
 // ================================= RS 232: USB0    
 // --------------------------------- serialPort1
 
-var serialPort1 = new SerialPort("/dev/ttyUSB0", {
+var serialPorts = [];
+
+serialPorts[0] = {connection:  new SerialPort("/dev/ttyUSB0", {
   baudrate: 9600
-}, false); 
+}, false), data: -1}; 
+
+serialPorts[0].connection.open(function (error) {
+    if (error) {
+      console.log('SERIAL_PORT:RS232 connection failed: ',error);
+    } else {
+      console.log('SERIAL_PORT:RS232 success');
+
+      serialPorts[0].connection.on('data', function(data) {
+        console.log('data received: ' + data);
+        serialRecord['beltCounter'+1]
+    }
+  });
+
 
 
 mysql.createConnection({
@@ -43,33 +44,45 @@ mysql.createConnection({
   password: 'esitsqlsecret',
   database: 'scale_agent'
 }).then(function(connection){
-  return connection.query('SELECT * FROM yield ORDER BY id DESC LIMIT 1');
+  DB = connection;
+  return DB.query('SELECT * FROM yield ORDER BY id DESC LIMIT 1');
 }).then(function(rows){
-  lastResults = rows[0];
-  console.log(lastResults);
-
-  serialPort1.open(function (error) {
-    if (error) {
-      console.log('SERIAL_PORT:RS232 connection failed: ',error);
-    } else {
-      console.log('SERIAL_PORT:RS232 success');
-
-      serialPort1.on('data', function(data) {
-        console.log('data received: ' + data);
-
-
-        if(data == lastResults.beltCounter1){
-          console.log('NO UPDATES');
-        }
-        else{
-          console.log('NEW COUNTER DATA: ' + data)
-        }
-      });
-    }
-  });
+  lastRecord = rows[0];
+  console.log('DB_LAST: ',lastRecord);
+  save(new Date());
 }).catch(function(err){
   console.log('ERROR: ', err);
 });
+
+
+function wait() {
+  setTimeout(function(){
+    var time  = new Date();
+    if((time - oldTime) > 300000) save(time);
+    else { wait(); console.log('loop')} 
+  }, 1000 * 60);
+}
+
+function save(time){
+
+  if((lastRecord.beltCounter1 < serialRecord.beltCounter1)){
+    console.log('NEW RECORD');
+    serialRecord.actualDate = new Date();
+    serialRecord.belt1 = serialRecord.beltCounter1 - lastRecord.beltCounter1;
+    DB.query('INSERT INTO yield SET ?', serialRecord).then(function(){
+      lastRecord = serialRecord;
+      oldTime = time;
+    })
+  } else{
+    console.log('NO CHANGES');
+  }
+  wait();
+}
+
+
+
+
+
 
 // var serialPort1 = new SerialPort("/dev/ttyUSB0", {
 //   baudrate: 9600
