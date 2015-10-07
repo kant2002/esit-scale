@@ -1,92 +1,30 @@
 
 var SerialPort = require("serialport").SerialPort;
 var Redis      = require('redis');
-var Sequelize  = require("sequelize");
-//require connection config
+var mysql      = require('mysql');
 
 
-
-
-var sequelize = new Sequelize('scale_agent', 'agent', 'esitsecret', {
-  host: 'localhost',
-  dialect: 'mysql',
-});
+var DB = mysql.createConnection({
+  host: '192.168.0.103',
+  user: 'esitagent',
+  password: 'esitsqlsecret',
+  database: 'scale_agent'
+}); 
 
 var redis = Redis.createClient();
 
 
-var BeltScale = sequelize.define('belt_scale', {
-  registerTime: {
-  	type: Sequelize.DATE,
-  	field: 'register_time'
-  },
-  scaleName1: {
-  	type: Sequelize.STRING,
-  	field: 'scale1_name'
-  },
-  scaleAmount1: {
-    type: Sequelize.INTEGER,
-    field: 'scale1_amount'
-  },
-  scaleCounter1: {
-  	type: Sequelize.INTEGER,
-    field: 'scale1_counter'
-  },
-  scaleName2: {
-  	type: Sequelize.STRING,
-  	field: 'scale2_name'
-  },
-  scaleAmount2: {
-    type: Sequelize.INTEGER,
-    field: 'scale2_amount'
-  },
-  scaleCounter2: {
-  	type: Sequelize.INTEGER,
-    field: 'scale2_counter'
-  },
-  scaleName3: {
-  	type: Sequelize.STRING,
-  	field: 'scale3_name'
-  },
-  scaleAmount3: {
-    type: Sequelize.INTEGER,
-    field: 'scale3_amount'
-  },
-  scaleCounter3: {
-  	type: Sequelize.INTEGER,
-    field: 'scale3_counter'
-  },
-  scaleName4: {
-  	type: Sequelize.STRING,
-  	field: 'scale4_name'
-  },
-  scaleAmount4: {
-    type: Sequelize.INTEGER,
-    field: 'scale4_amount'
-  },
-  scaleCounter4: {
-  	type: Sequelize.INTEGER,
-    field: 'scale4_counter'
-  }
+var oldTime = new Date();
+// var day = date.getDate();
+// var hour = date.getHours();
+// var minute = date.getMinutes();
+// var second = date.getSeconds();
+// var year = date.getFullYear();
 
-}, {
-	timestamps: false,
-	freezeTableName: true // Model tableName will be the same as the model name
+
+DB.query('SELECT * FROM yield ORDER BY id DESC LIMIT 1', function(err, results, fields){
+  console.log (err, results, fields);
 });
-
-BeltScale.sync().then(function () {
-  // Table created
- 	console.log('BeltScale Table Created');
-});
-
-
-var date = new Date();
-var day = date.getDate();
-var hour = date.getHours();
-var minute = date.getMinutes();
-var second = date.getSeconds();
-var year = date.getFullYear();
-
 
 var counter = 49300;
 var oldcounter = 49230; //
@@ -97,51 +35,53 @@ var prev_time, prev_counter, speed;
 
 var houe_diff;
 
-var serialPort = new SerialPort("/dev/tty.wchusbserial1410", {
-  baudrate: 115200
+// ================================= RS 232: USB0    
+// --------------------------------- serialPort1
+
+var serialPort1 = new SerialPort("/dev/ttyUSB0", {
+  baudrate: 9600
 }, false); 
 
-
-serialPort.open(function (error) {
+serialPort1.open(function (error) {
   if (error) {
-    console.log('SERIAL_PORT:RS232 connection failed: '+error);
+    console.log('SERIAL_PORT:RS232 connection failed: ',error);
   } else {
     console.log('SERIAL_PORT:RS232 success');
 
     serialPort.on('data', function(data) {
       console.log('data received: ' + data);
 
-      counter = data;
-
-      bulk = counter-oldcounter;
-      date = new Date();
+      // counter = data;
+      // bulk = counter-oldcounter;
       
-      day = date.getDate();
-      month = date.getMonth();
-      hour = date.getHours();
-      minute = date.getMinutes();
-      second = date.getSeconds();
-      year = date.getFullYear();
+      // date = new Date();
+      
+      // day = date.getDate();
+      // month = date.getMonth();
+      // hour = date.getHours();
+      // minute = date.getMinutes();
+      // second = date.getSeconds();
+      // year = date.getFullYear();
 
-      hour_diff = date - olddate;
-
-
-      var register_str = new Date();
-      register_str.setMinutes(0);
-      register_str.setSeconds(0);
-      register_str.setMilliseconds(0);
-
-      console.log(register_str);
+      // hour_diff = date - olddate;
 
 
-      if(counter-prev_counter){
-       prev_counter = counter;
-       speed = 360000/(date - prev_time);   //Tonn Hour Interpolation
-       prev_time = date;
-      }
+      // var register_str = new Date();
+      // register_str.setMinutes(0);
+      // register_str.setSeconds(0);
+      // register_str.setMilliseconds(0);
+
+      // console.log(register_str);
 
 
-      redis.hmset("scale1", "speed", speed, "counter", counter, "name", "pgs");
+      // if(counter-prev_counter){
+      //  prev_counter = counter;
+      //  speed = 360000/(date - prev_time);   //Tonn Hour Interpolation
+      //  prev_time = date;
+      // }
+
+
+      // redis.hmset("scale1", "speed", speed, "counter", counter, "name", "pgs");
 
       // redis.hmget(["scale1", "name", "counter", "speed"], function (err, replies) {
           
@@ -154,26 +94,30 @@ serialPort.open(function (error) {
 
       // Per-hour document record
 
-      if(hour_diff>=3600000){
+      // if(hour_diff>=3600000){
 
-        olddate = date;
-        oldcounter = counter; 
+      //   olddate = date;
+      //   oldcounter = counter; 
 
-        var indicator = {};
+      //   var indicator = {};
 
-        indicator.scaleName1 = "PGS";
-        indicator.scaleCounter1 = counter;
-        indicator.scaleAmount1 = bulk;
-        indicator.registerTime = register_str;
-        // inc.update_time = virual_hour;
+      //   indicator.scaleName1 = "PGS";
+      //   indicator.scaleCounter1 = counter;
+      //   indicator.scaleAmount1 = bulk;
+      //   indicator.registerTime = register_str;
+      //   // inc.update_time = virual_hour;
         
         
 
-        BeltScale.create(indicator).then(function(indication) {
-          // console.log(indication);
-        })
+      //   BeltScale.create(indicator).then(function(indication) {
+      //     // console.log(indication);
+      //   })
       
-      }
+      // }
+
+      // if(date - olddate){
+      //   olddate = date;
+      // }
 
 
 
