@@ -25,17 +25,17 @@ serialPorts[0] = {connection:  new SerialPort("/dev/ttyUSB0", {
 }, false), data: -1}; 
 
 serialPorts[0].connection.open(function (error) {
-    if (error) {
-      console.log('SERIAL_PORT:RS232 connection failed: ',error);
-    } else {
-      console.log('SERIAL_PORT:RS232 success');
+  if (error) {
+    console.log('SERIAL_PORT:RS232 connection failed: ',error);
+  } else {
+    console.log('SERIAL_PORT:RS232 success');
 
-      serialPorts[0].connection.on('data', function(data) {
-        console.log('data received: ' + data);
-        serialRecord['beltCounter'+1]
-    }
-  });
-
+    serialPorts[0].connection.on('data', function(data) {
+      console.log('data received: ' + data);
+      serialRecord['beltCounter'+1]
+    });
+  }
+});
 
 
 mysql.createConnection({
