@@ -44,10 +44,7 @@ var serialPort1 = new SerialPort("/dev/ttyUSB0", {
 }, false); 
 
 
-DB.query('SELECT * FROM yield ORDER BY id DESC LIMIT 1', function(err, results){
-  if(err) console.log(err);
-  
-}).then(function(rows){
+DB.query('SELECT * FROM yield ORDER BY id DESC LIMIT 1').then(function(rows){
   lastResults = rows[0];
   console.log(lastResults);
 
