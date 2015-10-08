@@ -61,8 +61,9 @@ mysql.createConnection({
 function wait() {
   setTimeout(function(){
     var time  = new Date();
-    if((time - oldTime) > 300000) save(time);
-    else { wait(); console.log('loop')} 
+    save(time);
+    //if((time - oldTime) > 300000) save(time);
+    //else { wait(); console.log('loop')} 
   }, 1000 * 60);
 }
 
@@ -75,11 +76,14 @@ function save(time){
     DB.query('INSERT INTO yield SET ?', serialRecord).then(function(){
       lastRecord = serialRecord;
       oldTime = time;
+      wait();
     })
   } else{
     console.log('NO CHANGES');
+    oldTime = time;
+    wait();
   }
-  wait();
+  
 }
 
 
