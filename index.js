@@ -21,6 +21,7 @@ var oldTime = new Date();
 
 var serialPorts = [];
 var serialRecord = {};
+var lastRecord = {};
 
 serialPorts[0] = {connection:  new SerialPort("/dev/ttyUSB0", {
   parser: serialport.parsers.readline("\r"),
@@ -36,7 +37,7 @@ serialPorts[0].connection.open(function (error) {
     serialPorts[0].connection.on('data', function(data) {
       //console.log('data received: ' + data);
       serialRecord['beltCounter'+1] = parseInt(data);
-      console.log('DB_LAST: ',lastRecord);
+      // console.log('DB_LAST: ',lastRecord);
     });
   }
 });
