@@ -68,13 +68,14 @@ function wait() {
 }
 
 function save(time){
-  console.log(parseInt(lastRecord.beltCounter1), serialRecord.beltCounter1)
-  if((parseInt(lastRecord.beltCounter1) < serialRecord.beltCounter1)){
+  var record = serialRecord;
+  console.log(lastRecord.beltCounter1, record.beltCounter1)
+  if((lastRecord.beltCounter1 < record.beltCounter1)){
     console.log('NEW RECORD');
-    serialRecord.actualDate = new Date();
-    serialRecord.belt1 = serialRecord.beltCounter1 - lastRecord.beltCounter1;
-    DB.query('INSERT INTO yield SET ?', serialRecord).then(function(){
-      lastRecord = serialRecord;
+    record.actualDate = new Date();
+    record.belt1 = record.beltCounter1 - lastRecord.beltCounter1;
+    DB.query('INSERT INTO yield SET ?', record).then(function(){
+      lastRecord = record;
       oldTime = time;
       wait();
     })
