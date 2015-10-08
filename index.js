@@ -23,7 +23,7 @@ var serialPorts = [];
 var serialRecord = {};
 
 serialPorts[0] = {connection:  new SerialPort("/dev/ttyUSB0", {
-  parser: serialport.parsers.readline("\r")
+  parser: serialport.parsers.readline("\r"),
   baudrate: 9600
 }, false), data: -1}; 
 
