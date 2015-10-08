@@ -35,7 +35,7 @@ serialPorts[0].connection.open(function (error) {
 
     serialPorts[0].connection.on('data', function(data) {
       //console.log('data received: ' + data);
-      serialRecord['beltCounter'+1] = 0 + data;
+      serialRecord['beltCounter'+1] = parseInt(data);
     });
   }
 });
@@ -67,8 +67,8 @@ function wait() {
 }
 
 function save(time){
-  console.log(lastRecord.beltCounter1, serialRecord.beltCounter1)
-  if((lastRecord.beltCounter1 < serialRecord.beltCounter1)){
+  console.log(parseInt(lastRecord.beltCounter1), serialRecord.beltCounter1)
+  if((parseInt(lastRecord.beltCounter1) < serialRecord.beltCounter1)){
     console.log('NEW RECORD');
     serialRecord.actualDate = new Date();
     serialRecord.belt1 = serialRecord.beltCounter1 - lastRecord.beltCounter1;
