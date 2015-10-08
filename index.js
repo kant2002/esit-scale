@@ -37,7 +37,12 @@ serialPorts[0].connection.open(function (error) {
     serialPorts[0].connection.on('data', function(data) {
       //console.log('data received: ' + data);
       serialRecord['beltCounter'+1] = parseInt(data);
-      console.log('DB_LAST: ',lastRecord.beltCounter1, parseInt(data));
+      redis.hmset("belt1", "counter", parseInt(data), "name", "pgs");
+
+      
+
+
+
     });
   }
 });
@@ -63,7 +68,12 @@ mysql.createConnection({
 function wait() {
   setTimeout(function(){
     var time  = new Date();
+    redis.hmget(["belt1", "counter"], function (err, replies) {
+        
+        console.log('REDIS: ', replies);
+    });
     save(time);
+
     //if((time - oldTime) > 300000) save(time);
     //else { wait(); console.log('loop')} 
   }, 1000 * 60);
