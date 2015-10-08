@@ -39,10 +39,6 @@ serialPorts[0].connection.open(function (error) {
       serialRecord['beltCounter'+1] = parseInt(data);
       redis.hmset("belt1", "counter", parseInt(data), "name", "pgs");
 
-      
-
-
-
     });
   }
 });
@@ -69,31 +65,31 @@ function wait() {
   setTimeout(function(){
     var time  = new Date();
     redis.hmget(["belt1", "counter"], function (err, replies) {
-        
-        console.log('REDIS: ', replies);
+        var record = {};
+        record.beltCounter1 = parseInt(replies[0]);
+        record.actualDate = time;
+        save(record);
     });
-    save(time);
-
+    
     //if((time - oldTime) > 300000) save(time);
     //else { wait(); console.log('loop')} 
   }, 1000 * 60);
 }
 
-function save(time){
-  var record = serialRecord;
+function save(record){
+ 
   console.log(lastRecord.beltCounter1, record.beltCounter1)
   if((lastRecord.beltCounter1 < record.beltCounter1)){
     console.log('NEW RECORD');
-    record.actualDate = new Date();
     record.belt1 = record.beltCounter1 - lastRecord.beltCounter1;
     DB.query('INSERT INTO yield SET ?', record).then(function(){
       lastRecord = record;
-      oldTime = time;
+      oldTime = record.actualDate;
       wait();
     })
   } else{
     console.log('NO CHANGES');
-    oldTime = time;
+    oldTime = record.actualDate;
     wait();
   }
   
