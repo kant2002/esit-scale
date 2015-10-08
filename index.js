@@ -1,5 +1,6 @@
 
-var SerialPort = require("serialport").SerialPort;
+var serialport = require("serialport");
+var SerialPort = serialport.SerialPort;
 var Redis      = require('redis');
 var mysql      = require('promise-mysql');
 var DB;
@@ -22,6 +23,7 @@ var serialPorts = [];
 var serialRecord = {};
 
 serialPorts[0] = {connection:  new SerialPort("/dev/ttyUSB0", {
+  parser: serialport.parsers.raw,
   baudrate: 9600
 }, false), data: -1}; 
 
