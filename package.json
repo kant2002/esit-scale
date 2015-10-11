@@ -1,4 +1,3 @@
-
 {
   "name": "esit-scale",
   "version": "1.0.0",
@@ -6,7 +5,8 @@
   "description": "Esit Scale Agent",
   "main": "agent.js",
   "scripts": {
-   
+    "bulkdev": "node-dev bulk.js -dev",
+    "dev": "node index.js -dev"
   },
   "repository": {
     "type": "git",
@@ -16,14 +16,15 @@
   "license": "ISC",
   "dependencies": {
     "colors": "^1.1.2",
+    "dotenv": "^1.2.0",
     "mysql": "^2.8.0",
     "promise-mysql": "^1.0.0",
+    "random-js": "^1.0.6",
+    "redis": "*",
     "serialport": "^1.7.4",
-    "underscore": "*",
-    "redis": "*"
-  
+    "underscore": "*"
   },
   "devDependencies": {
-    
+    "node-dev": "^2.7.0"
   }
 }

@@ -1,7 +1,8 @@
+require('dotenv').load();
 
-var serialport = require("serialport");
-var SerialPort = serialport.SerialPort;
+
 var Redis      = require('redis');
+var SerialBulk = require('./serialbulk');
 var mysql      = require('promise-mysql');
 var DB;
 
@@ -9,24 +10,37 @@ var DB;
 
 var redis = Redis.createClient();
 
-
 var oldTime = new Date();
 
-
-
-
-
-// ================================= RS 232: USB0    
-// --------------------------------- serialPort1
 
 var serialPorts = [];
 var serialRecord = {};
 var lastRecord = {};
 
-serialPorts[0] = {connection:  new SerialPort("/dev/ttyUSB0", {
-  parser: serialport.parsers.readline("\r"),
+serialConfig = {
+  parser: (!process.env.SERIAL) ? require("serialport").parsers.readline("\r") : 0,
   baudrate: 9600
-}, false), data: -1}; 
+};
+
+  
+var blankRow = {
+  belt1: 0,
+  belt2: 0, 
+  belt3: 0, 
+  belt4: 0, 
+  beltCounter1: 0,
+  beltCounter2: 0,
+  beltCounter3: 0,
+  beltCounter4: 0, 
+  actualDate: new Date(0)
+};
+
+
+// ================================= RS 232: USB0    
+// --------------------------------- serialPort1
+serialPorts[0] = (!process.env.SERIAL) ? new require("serialport").SerialPort("/dev/ttyUSB0", serialConfig, false) : {connection: new SerialBulk(2143)};
+
+console.log(serialPorts[0]);
 
 serialPorts[0].connection.open(function (error) {
   if (error) {
@@ -34,26 +48,49 @@ serialPorts[0].connection.open(function (error) {
   } else {
     console.log('SERIAL_PORT:RS232 success');
 
-    serialPorts[0].connection.on('data', function(data) {
-      //console.log('data received: ' + data);
-      serialRecord['beltCounter'+1] = parseInt(data);
-      redis.hmset("belt1", "counter", parseInt(data), "name", "pgs");
+    var netMap = Array.apply(null, new Array(60)).map(Number.prototype.valueOf,0);;
+    var speed = 0;
+    var moment = new Date().getSeconds();
+    var prevdata = 0;
 
+
+    serialPorts[0].connection.on('data', function(data) {
+      
+
+      var act = new Date().getSeconds();
+      
+      
+      if(prevdata == 0) prevdata = data;
+
+      if(((act == 0) && (moment>act)) || (act>moment)){
+        
+        netMap.push(data - prevdata);
+        netMap.shift();
+        prevdata = data;
+        moment = act;
+        speed = (netMap.reduce(function(pv, cv) { return pv + cv; }, 0)/60)*3600;
+        //console.log('------------------------------');
+      }
+
+      //console.log('data received: ',  data, ' prevdata: ', prevdata,' speed: ', speed);
+      serialRecord['beltCounter'+1] = parseInt(data);
+      redis.hmset("belt1", "counter", parseInt(data), "speed", speed, "name", "pgs");
     });
   }
 });
 
 
 mysql.createConnection({
-  host: '192.168.0.103',
-  user: 'esitagent',
-  password: 'esitsqlsecret',
-  database: 'scale_agent'
+  host: process.env.DB_HOST || 'localhost',
+  port: process.env.DB_PORT || 3306,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME
 }).then(function(connection){
   DB = connection;
   return DB.query('SELECT * FROM yield ORDER BY id DESC LIMIT 1');
 }).then(function(rows){
-  lastRecord = rows[0];
+  lastRecord = (rows[0]) ? rows[0] : blankRow;
   console.log('DB_LAST: ',lastRecord);
   save(new Date());
 }).catch(function(err){
@@ -73,7 +110,7 @@ function wait() {
     
     //if((time - oldTime) > 300000) save(time);
     //else { wait(); console.log('loop')} 
-  }, 1000 * 60);
+  }, 1000 * 60 * 5);
 }
 
 function save(record){
@@ -81,7 +118,7 @@ function save(record){
   console.log(lastRecord.beltCounter1, record.beltCounter1)
   if((lastRecord.beltCounter1 < record.beltCounter1)){
     console.log('NEW RECORD');
-    record.belt1 = record.beltCounter1 - lastRecord.beltCounter1;
+    record.belt1 = (lastRecord.beltCounter1) ? record.beltCounter1 - lastRecord.beltCounter1 : 0;
     DB.query('INSERT INTO yield SET ?', record).then(function(){
       lastRecord = record;
       oldTime = record.actualDate;
@@ -96,109 +133,5 @@ function save(record){
 }
 
 
-
-
-
-
-// var serialPort1 = new SerialPort("/dev/ttyUSB0", {
-//   baudrate: 9600
-// }, false); 
-
-// serialPort1.open(function (error) {
-//   if (error) {
-//     console.log('SERIAL_PORT:RS232 connection failed: ',error);
-//   } else {
-//     console.log('SERIAL_PORT:RS232 success');
-
-//     serialPort1.on('data', function(data) {
-//       console.log('data received: ' + data);
-
-
-//       if(data == lastResults.beltCounter1){
-//         console.log('NO UPDATES');
-//       }
-//       else{
-//         console.log('NEW COUNTER DATA: ' + data)
-//       }
-
-      // counter = data;
-      // bulk = counter-oldcounter;
-      
-      // date = new Date();
-      
-      // day = date.getDate();
-      // month = date.getMonth();
-      // hour = date.getHours();
-      // minute = date.getMinutes();
-      // second = date.getSeconds();
-      // year = date.getFullYear();
-
-      // hour_diff = date - olddate;
-
-
-      // var register_str = new Date();
-      // register_str.setMinutes(0);
-      // register_str.setSeconds(0);
-      // register_str.setMilliseconds(0);
-
-      // console.log(register_str);
-
-
-      // if(counter-prev_counter){
-      //  prev_counter = counter;
-      //  speed = 360000/(date - prev_time);   //Tonn Hour Interpolation
-      //  prev_time = date;
-      // }
-
-
-      // redis.hmset("scale1", "speed", speed, "counter", counter, "name", "pgs");
-
-      // redis.hmget(["scale1", "name", "counter", "speed"], function (err, replies) {
-          
-      //     replies.forEach(function (reply, i) {
-      //         console.log("    " + i + ": " + reply);
-      //     });
-      //     //redis.quit();
-      // });
-
-
-      // Per-hour document record
-
-      // if(hour_diff>=3600000){
-
-      //   olddate = date;
-      //   oldcounter = counter; 
-
-      //   var indicator = {};
-
-      //   indicator.scaleName1 = "PGS";
-      //   indicator.scaleCounter1 = counter;
-      //   indicator.scaleAmount1 = bulk;
-      //   indicator.registerTime = register_str;
-      //   // inc.update_time = virual_hour;
-        
-        
-
-      //   BeltScale.create(indicator).then(function(indication) {
-      //     // console.log(indication);
-      //   })
-      
-      // }
-
-      // if(date - olddate){
-      //   olddate = date;
-      // }
-
-
-
-
-    // });
-   
-  // serialPort.write("A", function(err, results) {
-  //   console.log('err ' + err);
-  //   console.log('results ' + results.toString(16));
-  // }); 
-  // }
-// });
 
 
