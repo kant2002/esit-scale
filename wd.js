@@ -1,14 +1,7 @@
 var sys = require('sys')
 var exec = require('child_process').exec;
 var child;
-function pon()
-{
-child = exec("pon vpn_metrix", function (error, stdout, stderr) {
-if (error !== null) {
-console.log('exec error: ' + error);
-}
-});
-}
+
 function shutdown(){
 child = exec("halt", function (error, stdout, stderr) {
 if (error !== null) {
@@ -48,14 +41,9 @@ nanoPort.on('data', function(data) {
 //console.log("reset timer");
 elapsed=0;
 }
-
- 
 });
    
-   
-    
 });
-
 
 function sendAlive()
 {
