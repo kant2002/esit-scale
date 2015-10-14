@@ -99,7 +99,7 @@ mysql.createConnection({
 function wait() {
   setTimeout(function(){
     var time  = new Date();
-    if((time - oldTime) > 1000*60*60){
+    if((time - oldTime) > 1000*120){
       console.log('-save');
       redis.hmget(["belt1", "counter"], function (err, replies) {
         var record = {};
@@ -111,7 +111,7 @@ function wait() {
       console.log('-loop');
        wait();
     }
-  }, 1000*60*4);
+  }, 1000*30);
 }
 
 function save(record){
