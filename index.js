@@ -32,15 +32,15 @@ var blankRow = {
   beltCounter2: 0,
   beltCounter3: 0,
   beltCounter4: 0, 
-  actualDate: new Date(0)
+  actualDate: new Date()
 };
 
 
 // ================================= RS 232: USB0    
 // --------------------------------- serialPort1
-serialPorts[0] = (!process.env.SERIAL) ? new require("serialport").SerialPort("/dev/ttyUSB0", serialConfig, false) : {connection: new SerialBulk(2143)};
+serialPorts[0] = (!process.env.SERIAL) ? new require("serialport").SerialPort("/dev/ttyUSB0", serialConfig, false) : {connection: new SerialBulk(2307)};
 
-console.log(serialPorts[0]);
+//console.log(serialPorts[0]);
 
 serialPorts[0].connection.open(function (error) {
   if (error) {
@@ -55,10 +55,8 @@ serialPorts[0].connection.open(function (error) {
 
 
     serialPorts[0].connection.on('data', function(data) {
-      
 
       var act = new Date().getSeconds();
-      
       
       if(prevdata == 0) prevdata = data;
 
@@ -71,7 +69,6 @@ serialPorts[0].connection.open(function (error) {
         speed = (netMap.reduce(function(pv, cv) { return pv + cv; }, 0)/60)*3600;
         //console.log('------------------------------');
       }
-
       //console.log('data received: ',  data, ' prevdata: ', prevdata,' speed: ', speed);
       serialRecord['beltCounter'+1] = parseInt(data);
       redis.hmset("belt1", "counter", parseInt(data), "speed", speed, "name", "pgs");
@@ -92,7 +89,8 @@ mysql.createConnection({
 }).then(function(rows){
   lastRecord = (rows[0]) ? rows[0] : blankRow;
   console.log('DB_LAST: ',lastRecord);
-  save(new Date());
+  oldTime = new Date();
+  wait();
 }).catch(function(err){
   console.log('ERROR: ', err);
 });
@@ -101,23 +99,26 @@ mysql.createConnection({
 function wait() {
   setTimeout(function(){
     var time  = new Date();
-    redis.hmget(["belt1", "counter"], function (err, replies) {
+    if((time - oldTime) > 1000*60*60){
+      console.log('-save');
+      redis.hmget(["belt1", "counter"], function (err, replies) {
         var record = {};
         record.beltCounter1 = parseInt(replies[0]);
         record.actualDate = time;
         save(record);
-    });
-    
-    //if((time - oldTime) > 300000) save(time);
-    //else { wait(); console.log('loop')} 
-  }, 1000 * 60 * 5);
+      });
+    }else{
+      console.log('-loop');
+       wait();
+    }
+  }, 1000*60*4);
 }
 
 function save(record){
  
   console.log(lastRecord.beltCounter1, record.beltCounter1)
   if((lastRecord.beltCounter1 < record.beltCounter1)){
-    console.log('NEW RECORD');
+    console.log('NEW RECORD: ', record);
     record.belt1 = (lastRecord.beltCounter1) ? record.beltCounter1 - lastRecord.beltCounter1 : 0;
     DB.query('INSERT INTO yield SET ?', record).then(function(){
       lastRecord = record;
@@ -125,7 +126,7 @@ function save(record){
       wait();
     })
   } else{
-    console.log('NO CHANGES');
+    console.log('NO CHANGES: ', record.actualDate);
     oldTime = record.actualDate;
     wait();
   }
