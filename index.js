@@ -4,45 +4,41 @@ require('dotenv').load();
 var Redis      = require('redis');
 var SerialBulk = require('./serialbulk');
 var mysql      = require('promise-mysql');
+var serialport = require('serialport');
 var DB;
-
-
 
 var redis = Redis.createClient();
 
 var oldTime = new Date();
-
 
 var serialPorts = [];
 var serialRecord = {};
 var lastRecord = {};
 
 serialConfig = {
-  parser: (!process.env.SERIAL) ? require("serialport").parsers.readline("\r") : 0,
+  parser: serialport.parsers.readline("\r"),
   baudrate: 9600
 };
 
-  
 var blankRow = {
   belt1: 0,
-  belt2: 0, 
-  belt3: 0, 
-  belt4: 0, 
+  belt2: 0,
+  belt3: 0,
+  belt4: 0,
   beltCounter1: 0,
   beltCounter2: 0,
   beltCounter3: 0,
-  beltCounter4: 0, 
+  beltCounter4: 0,
   actualDate: new Date()
 };
 
 
-// ================================= RS 232: USB0    
+// ================================= RS 232: USB0
 // --------------------------------- serialPort1
-serialPorts[0] = (!process.env.SERIAL) ? new require("serialport").SerialPort("/dev/ttyUSB0", serialConfig, false) : {connection: new SerialBulk(2307)};
+serialPorts[0] = new serialport.SerialPort("/dev/ttyUSB0", serialConfig, false);
 
 //console.log(serialPorts[0]);
-
-serialPorts[0].connection.open(function (error) {
+serialPorts[0].open(function (error) {
   if (error) {
     console.log('SERIAL_PORT:RS232 connection failed: ',error);
   } else {
@@ -50,33 +46,37 @@ serialPorts[0].connection.open(function (error) {
 
     var netMap = Array.apply(null, new Array(60)).map(Number.prototype.valueOf,0);;
     var speed = 0;
-    var moment = new Date().getSeconds();
+    var preact = 0;
     var prevdata = 0;
 
+    serialPorts[0].on('data', function(data) {
 
-    serialPorts[0].connection.on('data', function(data) {
+      var act = new Date().getMinutes();
 
-      var act = new Date().getSeconds();
-      
-      if(prevdata == 0) prevdata = data;
-
-      if(((act == 0) && (moment>act)) || (act>moment)){
-        
+      if(act != preact){
+        if(prevdata == 0) prevdata = data;
+        preact = act;
         netMap.push(data - prevdata);
         netMap.shift();
         prevdata = data;
-        moment = act;
         speed = (netMap.reduce(function(pv, cv) { return pv + cv; }, 0)/60)*3600;
-        //console.log('------------------------------');
+        console.log('[DATA] ' , data, speed);
       }
+//      if(((act == 0) && (moment>act)) || (act>moment)){
+
+        // netMap.push(data - prevdata);
+        // netMap.shift();
+        // prevdata = data;
+        // moment = act;
+        // speed = (netMap.reduce(function(pv, cv) { return pv + cv; }, 0)/60)*3600;
+        //console.log('------------------------------');
+  //    }
       //console.log('data received: ',  data, ' prevdata: ', prevdata,' speed: ', speed);
       serialRecord['beltCounter'+1] = parseInt(data);
       redis.hmset("belt1", "counter", parseInt(data), "speed", speed, "name", "pgs");
     });
   }
 });
-
-
 mysql.createConnection({
   host: process.env.DB_HOST || 'localhost',
   port: process.env.DB_PORT || 3306,
@@ -115,7 +115,7 @@ function wait() {
 }
 
 function save(record){
- 
+
   console.log(lastRecord.beltCounter1, record.beltCounter1)
   if((lastRecord.beltCounter1 < record.beltCounter1)){
     console.log('NEW RECORD: ', record);
@@ -130,9 +130,5 @@ function save(record){
     oldTime = record.actualDate;
     wait();
   }
-  
+
 }
-
-
-
-
