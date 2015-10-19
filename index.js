@@ -60,7 +60,7 @@ serialPorts[0].open(function (error) {
         netMap.shift();
         prevdata = data;
         speed = (netMap.reduce(function(pv, cv) { return pv + cv; }, 0)/60)*3600;
-        console.log('[DATA] ' , data, speed);
+        //console.log('[DATA] ' , data, speed);
       }
 //      if(((act == 0) && (moment>act)) || (act>moment)){
 
@@ -88,7 +88,7 @@ mysql.createConnection({
   return DB.query('SELECT * FROM yield ORDER BY id DESC LIMIT 1');
 }).then(function(rows){
   lastRecord = (rows[0]) ? rows[0] : blankRow;
-  console.log('DB_LAST: ',lastRecord);
+  //console.log('DB_LAST: ',lastRecord);
   oldTime = new Date();
   wait();
 }).catch(function(err){
@@ -100,7 +100,7 @@ function wait() {
   setTimeout(function(){
     var time  = new Date();
     if((time - oldTime) > 1000*60*60){
-      console.log('-save');
+      //console.log('-save');
       redis.hmget(["belt1", "counter"], function (err, replies) {
         var record = {};
         record.beltCounter1 = parseInt(replies[0]);
@@ -108,7 +108,7 @@ function wait() {
         save(record);
       });
     }else{
-      console.log('-loop');
+      //console.log('-loop');
        wait();
     }
   }, 1000*60*4);
@@ -118,7 +118,7 @@ function save(record){
 
   console.log(lastRecord.beltCounter1, record.beltCounter1)
   if((lastRecord.beltCounter1 < record.beltCounter1)){
-    console.log('NEW RECORD: ', record);
+    //console.log('NEW RECORD: ', record);
     record.belt1 = (lastRecord.beltCounter1) ? record.beltCounter1 - lastRecord.beltCounter1 : 0;
     DB.query('INSERT INTO yield SET ?', record).then(function(){
       lastRecord = record;
@@ -126,7 +126,7 @@ function save(record){
       wait();
     })
   } else{
-    console.log('NO CHANGES: ', record.actualDate);
+    //console.log('NO CHANGES: ', record.actualDate);
     oldTime = record.actualDate;
     wait();
   }
